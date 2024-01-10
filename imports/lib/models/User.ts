@@ -13,6 +13,11 @@ declare module "meteor/meteor" {
       roles?: Record<string, string[]>; // scope -> roles
       displayName?: string;
       googleAccount?: string;
+      /**
+       * A historical note: we have not always collected googleAccountId, so it
+       * is possible that googleAccount is populated while googleAccountId is
+       * not. However, the reverse should not happen
+       */
       googleAccountId?: string;
       discordAccount?: DiscordAccountType;
       phoneNumber?: string;
