@@ -5,6 +5,8 @@ import sendChatMessageInternal from "../sendChatMessageInternal";
 import type Hookset from "./Hookset";
 
 const ChatHooks: Hookset = {
+  name: "ChatHooks",
+
   async onPuzzleSolved(puzzleId: string, answer: string) {
     const puzzle = await Puzzles.findOneAsync(puzzleId);
     if (!puzzle) return;

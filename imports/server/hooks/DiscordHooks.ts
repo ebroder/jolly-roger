@@ -49,6 +49,8 @@ async function renderChatMessageContent(
 }
 
 const DiscordHooks: Hookset = {
+  name: "DiscordHooks",
+
   async onPuzzleCreated(puzzleId: string) {
     const bot = await makeDiscordBotFromSettings();
     if (!bot) {
