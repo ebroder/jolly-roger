@@ -1,3 +1,4 @@
+import type { Meteor } from "meteor/meteor";
 import type { IconDefinition } from "@fortawesome/fontawesome-svg-core";
 import { faFileAlt } from "@fortawesome/free-solid-svg-icons/faFileAlt";
 import { faTable } from "@fortawesome/free-solid-svg-icons/faTable";
@@ -5,14 +6,14 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import React from "react";
 import styled from "styled-components";
 import type { DocumentType } from "../../lib/models/Documents";
-import DeepLink from "./DeepLink";
 
 interface DocumentDisplayProps {
   document: DocumentType;
   displayMode: "link" | "embed";
+  user: Meteor.User;
 }
 
-const StyledDeepLink = styled(DeepLink)`
+const StyledDeepLink = styled.a`
   display: inline-block;
   font-weight: bold;
   white-space: nowrap;
@@ -44,21 +45,25 @@ export const DocumentMessage = styled.span`
 const GoogleDocumentDisplay = ({
   document,
   displayMode,
+  user,
 }: DocumentDisplayProps) => {
   let url: string;
-  let deepUrl: string;
   let title: string;
   let icon: IconDefinition;
+  // If the user has linked their Google account, try to force usage of that specific account.
+  // Otherwise, they may open the document anonymously. If the user isn't signed in, they will be
+  // redirected to the default account in their browser session anyway.
+  const authUserParam = user.googleAccount
+    ? `authuser=${user.googleAccount}&`
+    : "";
   switch (document.value.type) {
     case "spreadsheet":
-      url = `https://docs.google.com/spreadsheets/d/${document.value.id}/edit?ui=2&rm=embedded&gid=0#gid=0`;
-      deepUrl = `googlesheets://${url}`;
+      url = `https://docs.google.com/spreadsheets/d/${document.value.id}/edit?${authUserParam}ui=2&rm=embedded&gid=0#gid=0`;
       title = "Sheet";
       icon = faTable;
       break;
     case "document":
-      url = `https://docs.google.com/document/d/${document.value.id}/edit?ui=2&rm=embedded#gid=0`;
-      deepUrl = `googledocs://${url}`;
+      url = `https://docs.google.com/document/d/${document.value.id}/edit?${authUserParam}ui=2&rm=embedded#gid=0`;
       title = "Doc";
       icon = faFileAlt;
       break;
@@ -74,10 +79,8 @@ const GoogleDocumentDisplay = ({
   switch (displayMode) {
     case "link":
       return (
-        <StyledDeepLink nativeUrl={deepUrl} browserUrl={url}>
-          <a href={url} target="new">
-            <FontAwesomeIcon fixedWidth icon={icon} /> <span>{title}</span>
-          </a>
+        <StyledDeepLink href={url} target="_blank" rel="noreferrer noopener">
+          <FontAwesomeIcon fixedWidth icon={icon} /> <span>{title}</span>
         </StyledDeepLink>
       );
     case "embed":
@@ -90,11 +93,19 @@ const GoogleDocumentDisplay = ({
   }
 };
 
-const DocumentDisplay = ({ document, displayMode }: DocumentDisplayProps) => {
+const DocumentDisplay = ({
+  document,
+  displayMode,
+  user,
+}: DocumentDisplayProps) => {
   switch (document.provider) {
     case "google":
       return (
-        <GoogleDocumentDisplay document={document} displayMode={displayMode} />
+        <GoogleDocumentDisplay
+          document={document}
+          displayMode={displayMode}
+          user={user}
+        />
       );
     default:
       return (
