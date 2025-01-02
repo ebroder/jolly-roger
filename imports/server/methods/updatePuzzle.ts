@@ -22,6 +22,9 @@ defineMethod(updatePuzzle, {
       url: Match.Optional(String),
       tags: [String],
       expectedAnswerCount: Number,
+      // We accept this argument since it's provided by the form, but it's not checked here - only
+      // during puzzle creation, to avoid duplicates when creating new puzzles.
+      allowDuplicateUrls: Match.Optional(Boolean),
     });
 
     return arg;
@@ -50,7 +53,7 @@ defineMethod(updatePuzzle, {
     // Look up each tag by name and map them to tag IDs.
     const tagIds = await Promise.all(
       tags.map(async (tagName) => {
-        return getOrCreateTagByName(oldPuzzle.hunt, tagName);
+        return getOrCreateTagByName(this.userId!, oldPuzzle.hunt, tagName);
       }),
     );
 
@@ -85,7 +88,7 @@ defineMethod(updatePuzzle, {
     if (oldPuzzle.title !== title) {
       Meteor.defer(
         Meteor.bindEnvironment(async () => {
-          const doc = await ensureDocument({
+          const doc = await ensureDocument(this.userId!, {
             _id: puzzleId,
             title,
             hunt: oldPuzzle.hunt,
